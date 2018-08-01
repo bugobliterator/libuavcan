@@ -1160,6 +1160,12 @@ int CanDriver::init(const uavcan::uint32_t bitrate, const CanIface::OperatingMod
     if (!initialized_once[can_number]) {
         initialized_once[can_number] = true;
         initialized_by_me_[can_number] = true;
+        if (can_number == 1 && initialized_once[0] == false) {
+            //CAN1 needs to be initialised if CAN2 needs to be utilised
+            initialized_by_me_[0] = true;
+            initialized_once[0] = true;
+            initOnce(0);
+        }
         initOnce(can_number);
     } else if (!initialized_by_me_[can_number]) {
         UAVCAN_STM32_LOG("CAN iface %d initialized in another CANDriver!", can_number);
@@ -1167,7 +1173,8 @@ int CanDriver::init(const uavcan::uint32_t bitrate, const CanIface::OperatingMod
         goto fail;
     }
 
-    if (can_number == 0) {
+
+    if (can_number == 1 || can_number == 0) {
         /*
         * CAN1
         */
@@ -1180,7 +1187,8 @@ int CanDriver::init(const uavcan::uint32_t bitrate, const CanIface::OperatingMod
             ifaces[0] = UAVCAN_NULLPTR;
             goto fail;
         }
-    } else if (can_number == 1) {
+    }
+    if (can_number == 1) {
         /*
         * CAN2
         */
